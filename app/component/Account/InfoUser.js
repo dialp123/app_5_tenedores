@@ -1,14 +1,17 @@
+//informacion del usuario, foto de perfil, correo y nombre, esta seccion permite actualizar la foto de perfil
+
 import React from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { Avatar } from "react-native-elements";
 import * as firebase from "firebase";
 import * as Permissions from "expo-permissions";
+import * as MediaLibrary from "expo-media-library";
 import * as ImagePicker from "expo-image-picker";
 
 import DefaultAvatar from "../../../assets/img/avatar-default.jpg";
 
-//Avatar -- elemnto de foto de perfil
-//permissions permite conceder permisos android, especificar dichos permisos en app.json en seccion android
+//Avatar -- elemento de foto de perfil
+//MeadiaLibrary permite conceder permisos android, especificar dichos permisos en app.json en seccion android
 //Image Picker permite abrir la galaeria de imagenes; launchImageLibraryAsync lanza la galeria de imagenes
 //blob() -- Los Blobs representan datos que no necesariamente se encuentran en un formato nativo de JavaScript.
 
@@ -21,15 +24,13 @@ export default function InfoUser(props) {
   } = props;
 
   const changeAvatar = async () => {
-    const resultPermissions = await Permissions.askAsync(
-      Permissions.CAMERA_ROLL
+    //pedir permiso de almacenamiento
+    const resultPermissions = await MediaLibrary.requestPermissionsAsync(
+      MediaLibrary.MEDIA_LIBRARY
     );
-    // const resultPermissionsCamera =
-    //   resultPermissions.permissions.cameraRoll.status;
 
-    const resultPermissionsCamera = true;
-
-    if (resultPermissionsCamera === "denied") {
+    //status: estado del permiso, denegado o aceptado
+    if (resultPermissions.status === "denied") {
       toastRef.current.show("Permiso denegado");
     } else {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -93,7 +94,7 @@ export default function InfoUser(props) {
         rounded
         size="large"
         containerStyle={styles.userInfoAvatar}
-        source={photoURL ? photoURL : DefaultAvatar}
+        source={{ uri: photoURL ? photoURL : DefaultAvatar }}
       >
         <Avatar.Accessory size={23} onPress={changeAvatar} />
       </Avatar>

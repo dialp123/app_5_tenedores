@@ -22,9 +22,9 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FFFFFF",
-        "permissions": ["CAMERA_ROLL", "READ_XTERNAL_STORAGE", "WRITE_XTERNAL_STORAGE"]
-      }
+        "backgroundColor": "#FFFFFF"
+      },
+      "permissions": ["CAMERA_ROLL", "READ_XTERNAL_STORAGE", "WRITE_XTERNAL_STORAGE"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
