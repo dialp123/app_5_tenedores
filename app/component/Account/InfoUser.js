@@ -1,10 +1,9 @@
 //informacion del usuario, foto de perfil, correo y nombre, esta seccion permite actualizar la foto de perfil
 
 import React from "react";
-import { StyleSheet, View, Text } from "react-native";
+import { StyleSheet, View, Text, Platform } from "react-native";
 import { Avatar } from "react-native-elements";
 import * as firebase from "firebase";
-import * as Permissions from "expo-permissions";
 import * as MediaLibrary from "expo-media-library";
 import * as ImagePicker from "expo-image-picker";
 
@@ -25,9 +24,7 @@ export default function InfoUser(props) {
 
   const changeAvatar = async () => {
     //pedir permiso de almacenamiento
-    const resultPermissions = await MediaLibrary.requestPermissionsAsync(
-      MediaLibrary.MEDIA_LIBRARY
-    );
+    const resultPermissions = await MediaLibrary.requestPermissionsAsync();
 
     //status: estado del permiso, denegado o aceptado
     if (resultPermissions.status === "denied") {
@@ -94,7 +91,15 @@ export default function InfoUser(props) {
         rounded
         size="large"
         containerStyle={styles.userInfoAvatar}
-        source={{ uri: photoURL ? photoURL : DefaultAvatar }}
+        source={
+          Platform.OS === ("android" || "ios")
+            ? {
+                uri: photoURL ? photoURL : DefaultAvatar,
+              }
+            : photoURL
+            ? photoURL
+            : DefaultAvatar
+        }
       >
         <Avatar.Accessory size={23} onPress={changeAvatar} />
       </Avatar>
