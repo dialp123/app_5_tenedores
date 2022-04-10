@@ -9,7 +9,7 @@ import { useNavigation } from "@react-navigation/native";
 //ScrollView: permite hacer scroll
 //useNavigation: permite navegar hacia un screen especifico
 
-export default function UserGuest() {
+export default function UserGuest(props) {
   const navigation = useNavigation();
 
   return (

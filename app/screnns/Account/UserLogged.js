@@ -1,7 +1,7 @@
 //creen usuarios logeados
 
 import React, { useRef, useState, useEffect } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Button } from "react-native-elements";
 import * as firebase from "firebase";
 import Toast from "react-native-fast-toast";

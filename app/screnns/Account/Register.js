@@ -9,7 +9,7 @@ import Toast from "react-native-fast-toast";
 
 import RegisterForm from "../../component/Account/RegisterForm";
 
-export default function Register() {
+export default function Register(props) {
   const toastRef = useRef();
 
   return (
