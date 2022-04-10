@@ -46,14 +46,14 @@ export default function ChangeDisplayNameForm(props) {
     <View style={styles.view}>
       <Input
         ref={input}
-        placeholder="Nombre y apellidos" //texto que se muestra si el input esta vacio
+        placeholder="Nuevos nombres y apellidos" //texto que se muestra si el input esta vacio
         containerStyle={styles.input}
         rightIcon={{
           type: "material-community",
           name: "account-circle-outline",
           color: "#c2c2c2",
         }}
-        defaultValue={displayName || ""} //pintar display name, pero si este es nullpintar string vacio
+        //defaultValue={displayName || ""} //pintar display name, pero si este es nullpintar string vacio
         onChange={(e) => setNewDisplayName(e.nativeEvent.text)}
         errorMessage={error}
       ></Input>

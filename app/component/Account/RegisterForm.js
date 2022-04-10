@@ -104,7 +104,7 @@ export default function RegisterForm(props) {
         }
       ></Input>
       <Button
-        title={"Unirse"}
+        title={"Regitrarse"}
         containerStyle={styles.btnContainerRegister}
         buttonStyle={styles.btnRegister}
         onPress={onSubmit}

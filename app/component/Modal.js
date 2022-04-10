@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
   overlay: {
     height: "auto",
     width: "90%",
-    alignItems: "center",
+    alignItems: "stretch",
     backgroundColor: "#ffffff",
     margin: 30,
   },

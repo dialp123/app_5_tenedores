@@ -7,6 +7,8 @@ import { map } from "lodash";
 
 import Modal from "../Modal";
 import ChangeDisplayNameForm from "./ChangeDisplayNameForm";
+import ChangeEmailForm from "./ChangeEmailForm";
+import ChangePasswordForm from "./ChangePasswordForm";
 
 //ListItem == permite agregar una lista de componentes y recorrer cada uno mediante un array
 
@@ -30,11 +32,23 @@ export default function AccountOptions(props) {
         setShowModal(true);
         break;
       case "mail":
-        setRenderComponent(<Text>Cambiando el email</Text>);
+        setRenderComponent(
+          <ChangeEmailForm
+            email={userInfo.email}
+            setShowModal={setShowModal}
+            toastRef={toastRef}
+            setReloadUserInfo={setReloadUserInfo}
+          ></ChangeEmailForm>
+        );
         setShowModal(true);
         break;
       case "password":
-        setRenderComponent(<Text>CAmbiando contraseña</Text>);
+        setRenderComponent(
+          <ChangePasswordForm
+            setShowModal={setShowModal}
+            toastRef={toastRef}
+          ></ChangePasswordForm>
+        );
         setShowModal(true);
         break;
       default:
@@ -73,7 +87,7 @@ export default function AccountOptions(props) {
         ))
       }
       <Modal isVisible={showModal} setIsVisible={setShowModal}>
-        <Text>{renderComponent}</Text>
+        {renderComponent}
       </Modal>
     </View>
   );
