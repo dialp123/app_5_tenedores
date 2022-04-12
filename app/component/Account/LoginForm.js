@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { NativeEventEmitter, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Input, Icon, Button } from "react-native-elements";
 import { isEmpty, size } from "lodash";
 import * as firebase from "firebase";

@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { View } from "react-native";
 import Toast from "react-native-fast-toast";
+import * as firebase from "firebase";
 
 import Loading from "../../component/Loading";
 import AddRestaurantForm from "../../component/Restaurants/AddRestaurantForm";
@@ -17,7 +18,7 @@ export default function AddRestaurant(props) {
         setIsLoading={setIsLoading}
         navigation={navigation}
       ></AddRestaurantForm>
-      <Toast ref={toastRef} position="center" opacity={0.9}></Toast>
+      <Toast ref={toastRef}></Toast>
       <Loading isVisible={isLoading} text="Creando restaurante"></Loading>
     </View>
   );

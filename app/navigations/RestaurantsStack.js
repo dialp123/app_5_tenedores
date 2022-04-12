@@ -1,4 +1,4 @@
-import react from "react";
+import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 
 import Restaurants from "../screnns/Restaurants/Restaurants";
