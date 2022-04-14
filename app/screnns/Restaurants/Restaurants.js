@@ -17,7 +17,7 @@ export default function Restaurants(props) {
 
   return (
     <View style={styles.viewBody}>
-      <Text>Restauranst......</Text>
+      <Text>Restauranstes......</Text>
       {user && (
         <Icon
           type="material-community"
