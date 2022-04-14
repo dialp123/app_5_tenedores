@@ -17,14 +17,15 @@ import {
 } from "react-native-elements";
 import * as MediaLibrary from "expo-media-library";
 import * as ImagePicker from "expo-image-picker";
-import { map, size, filter } from "lodash";
+import { map, size, filter, result } from "lodash";
 import * as Location from "expo-location";
+import MapView from "react-native-maps";
 //import AwesomeAlert from "react-native-awesome-alerts";
 
 import Modal from "../Modal";
 
+//Location: usadopara pedir permiso de la location del usuario y capturar sus coordenadas
 //Dimensions: usado para capturar el ancho de la pantalla en pixeles
-
 const widthScreen = Dimensions.get("window").width;
 
 export default function AddRestaurantForm(props) {
@@ -34,12 +35,39 @@ export default function AddRestaurantForm(props) {
   const [restaurantName, setRestaurantName] = useState("");
   const [restaurantAddres, setRestaurantAddres] = useState("");
   const [restaurantDescription, setRestaurantDescription] = useState("");
-  //contener iagenes guardadas
+  //contener imagenes guardadas
   const [imagesSelected, setImagesSelected] = useState([]);
   const [isVisibleMap, setIsVisibleMap] = useState(false);
-
+  const [locationRestaurant, setLocationRestaurant] = useState(null);
+  const [errorInput, setErrorInput] = useState({});
   const addRestaurant = () => {
-    //console.log(alertWeb.current);
+    setErrorInput({});
+    let errorTemp = {};
+
+    if (!restaurantName || !restaurantAddres || !restaurantDescription) {
+      errorTemp = {
+        name: !restaurantName && "Agregar un nombre",
+        addres: !restaurantAddres && "Agregar una direccion",
+        description: !restaurantDescription && "Agregar una descripcion",
+      };
+    } else if (size(imagesSelected) == 0) {
+      errorTemp = {
+        iconImageBorder: 3,
+        iconImageColor: "red",
+      };
+      toastRef.current.show("Seleccionar minimo una imagen de presentacion");
+    } else if (!locationRestaurant) {
+      toastRef.current.show(
+        "Seleccionar ubicacion del restaurante en google maps"
+      );
+      errorTemp = {
+        iconMapColor: "red",
+      };
+    } else {
+      console.log("ok");
+    }
+
+    setErrorInput(errorTemp);
   };
 
   return (
@@ -50,18 +78,26 @@ export default function AddRestaurantForm(props) {
         setRestaurantAddres={setRestaurantAddres}
         setRestaurantDescription={setRestaurantDescription}
         setIsVisibleMap={setIsVisibleMap}
+        errorInput={errorInput}
+        locationRestaurant={locationRestaurant}
       ></FormAdd>
       <UploadImage
         toastRef={toastRef}
         imagesSelected={imagesSelected}
         setImagesSelected={setImagesSelected}
+        errorInput={errorInput}
       ></UploadImage>
       <Button
         title="Crear restaurante"
         onPress={addRestaurant}
         buttonStyle={styles.btnAddRestaurant}
       ></Button>
-      <Map isVisibleMap={isVisibleMap} setIsVisibleMap={setIsVisibleMap}></Map>
+      <Map
+        isVisibleMap={isVisibleMap}
+        setIsVisibleMap={setIsVisibleMap}
+        toastRef={toastRef}
+        setLocationRestaurant={setLocationRestaurant}
+      ></Map>
     </ScrollView>
   );
 }
@@ -95,8 +131,9 @@ function FormAdd(props) {
     setRestaurantAddres,
     setRestaurantDescription,
     setIsVisibleMap,
+    errorInput,
+    locationRestaurant,
   } = props;
-
   return (
     <View styles={styles.viewForm}>
       <Input
@@ -105,6 +142,7 @@ function FormAdd(props) {
         onChange={(e) => {
           setRestaurantName(e.nativeEvent.text);
         }}
+        errorMessage={errorInput.name}
       ></Input>
       <Input
         placeholder="Direccion"
@@ -115,9 +153,14 @@ function FormAdd(props) {
         rightIcon={{
           type: "material-community",
           name: "google-maps",
-          color: "#c2c2c2",
+          color: locationRestaurant
+            ? "#00a680"
+            : errorInput.iconMapColor
+            ? "red"
+            : "#c2c2c2",
           onPress: () => setIsVisibleMap(true),
         }}
+        errorMessage={errorInput.addres}
       ></Input>
       <Input
         placeholder="Descripcion de restaurante"
@@ -126,29 +169,90 @@ function FormAdd(props) {
         onChange={(e) => {
           setRestaurantDescription(e.nativeEvent.text);
         }}
+        errorMessage={errorInput.description}
       ></Input>
     </View>
   );
 }
 
+// modal donde se muestra el mapa para seleccionar la ubicacion
 function Map(props) {
-  const { isVisibleMap, setIsVisibleMap } = props;
+  const { isVisibleMap, setIsVisibleMap, toastRef, setLocationRestaurant } =
+    props;
+  const [location, setLocation] = useState(null);
+
+  const confirmLocation = () => {
+    setLocationRestaurant(location);
+    toastRef.current.show("Localizacion seleccionada");
+    setIsVisibleMap(false);
+  };
 
   useEffect(() => {
     (async () => {
-      const resultPermissions = Permissions.ask;
+      const resultPermission =
+        await Location.requestForegroundPermissionsAsync();
+
+      if (resultPermission.status !== "granted") {
+        toastRef.current.show(
+          "Aceptar manualmente los permisos de localizacion para poder agregar la direccion del restaurante",
+          3000
+        );
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      setLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        longitudeDelta: 0.001,
+        latitudeDelta: 0.001,
+      });
     })();
   }, []);
 
   return (
     <Modal isVisible={isVisibleMap} setIsVisible={setIsVisibleMap}>
-      <Text>mapa</Text>
+      <View>
+        {location && (
+          <MapView
+            style={styles.mapStyle}
+            initialRegion={location}
+            showsUserLocation={true}
+            onRegionChange={(region) => {
+              //region:coordenadas donde apunta el centro de la ventana del mapView
+              setLocation(region);
+            }}
+          >
+            <MapView.Marker
+              coordinate={{
+                latitude: location.latitude,
+                longitude: location.longitude,
+              }}
+              draggable //marcador mobible
+            ></MapView.Marker>
+          </MapView>
+        )}
+        <View style={styles.mapBtn}>
+          <Button
+            title="Guardar Ubicacion"
+            containerStyle={styles.viewMapContainerSelect}
+            buttonStyle={styles.viewMapBtnSelect}
+            onPress={confirmLocation}
+          ></Button>
+          <Button
+            title="Cancelar"
+            containerStyle={styles.viewMapBtnContainerCancel}
+            buttonStyle={styles.viewMapBtnCancel}
+            onPress={() => setIsVisibleMap(false)}
+          ></Button>
+        </View>
+      </View>
     </Modal>
   );
 }
 
 function UploadImage(props) {
-  const { toastRef, imagesSelected, setImagesSelected } = props;
+  const { toastRef, imagesSelected, setImagesSelected, errorInput } = props;
 
   //sleccionar la imagen de la galeria
   const imageSelect = async () => {
@@ -215,11 +319,20 @@ function UploadImage(props) {
           type="materia-community"
           name="camera"
           color="#7a7a7a"
-          containerStyle={styles.containerIcon}
+          containerStyle={[
+            styles.containerIcon,
+            {
+              borderWidth: errorInput.iconImageBorder
+                ? errorInput.iconImageBorder
+                : 0,
+              borderColor: errorInput.iconImageColor
+                ? errorInput.iconImageColor
+                : "grey",
+            },
+          ]}
           onPress={imageSelect}
         ></Icon>
       )}
-
       {map(imagesSelected, (imageRestaurant, index) => (
         <Avatar
           key={index}
@@ -265,7 +378,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginLeft: 20,
     marginRight: 20,
-    marginTop: 30,
+    marginTop: 20,
   },
   containerIcon: {
     alignContent: "center",
@@ -284,5 +397,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
     height: 200,
     marginBottom: 20,
+  },
+  mapStyle: {
+    width: "100%",
+    height: 550,
+  },
+  mapBtn: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 10,
+  },
+  viewMapBtnContainerCancel: {
+    paddingLeft: 5,
+  },
+  viewMapBtnCancel: {
+    backgroundColor: "#a60d0d",
+  },
+  viewMapContainerSelect: {
+    paddingRight: 5,
+  },
+  viewMapBtnSelect: {
+    backgroundColor: "#00a680",
   },
 });
