@@ -24,7 +24,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "permissions": ["CAMERA_ROLL", "READ_XTERNAL_STORAGE", "WRITE_XTERNAL_STORAGE"]
+      "permissions": ["CAMERA_ROLL", "READ_XTERNAL_STORAGE", "WRITE_XTERNAL_STORAGE","LOCATION"]
     },
     "web": {
       "favicon": "./assets/favicon.png"

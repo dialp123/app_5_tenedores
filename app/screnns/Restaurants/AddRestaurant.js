@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { View } from "react-native";
+import { ScrollView } from "react-native";
 import Toast from "react-native-fast-toast";
 import * as firebase from "firebase";
 
@@ -12,14 +12,14 @@ export default function AddRestaurant(props) {
   const toastRef = useRef();
 
   return (
-    <View>
+    <ScrollView>
       <AddRestaurantForm
         toastRef={toastRef}
         setIsLoading={setIsLoading}
         navigation={navigation}
       ></AddRestaurantForm>
-      <Toast ref={toastRef}></Toast>
+      <Toast ref={toastRef} location="top" opacity={0.9}></Toast>
       <Loading isVisible={isLoading} text="Creando restaurante"></Loading>
-    </View>
+    </ScrollView>
   );
 }
