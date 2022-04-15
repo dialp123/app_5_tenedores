@@ -23,12 +23,14 @@ import MapView from "react-native-maps";
 import { firebaseApp } from "../../utils/Firebase";
 import firebase from "firebase/app";
 import "firebase/storage";
+import uuid from "random-uuid-v4";
 //import AwesomeAlert from "react-native-awesome-alerts";
 
 import Modal from "../Modal";
 
 //Location: usadopara pedir permiso de la location del usuario y capturar sus coordenadas
 //Dimensions: usado para capturar el ancho de la pantalla en pixeles
+// uuid:usado para generarids random
 const widthScreen = Dimensions.get("window").width;
 
 export default function AddRestaurantForm(props) {
@@ -67,7 +69,11 @@ export default function AddRestaurantForm(props) {
         iconMapColor: "red",
       };
     } else {
-      uploadImageStorage();
+      setIsLoading(true);
+      uploadImageStorage.then((response) => {
+        console.log(response);
+        setIsLoading(false);
+      });
     }
 
     setErrorInput(errorTemp);
@@ -76,12 +82,27 @@ export default function AddRestaurantForm(props) {
   //sube imagenes seleccionadas al storage de firebase
   const uploadImageStorage = async () => {
     const imageBlob = [];
-    console.log(imagesSelected);
-    map(imagesSelected, async (image) => {
-      const response = await fetch(image);
-      const blob = await response.blob();
-      const ref = firebase.storage().ref("Restaurant-images").child();
-    });
+    //dado que se tiene demaciadas sentencias asincronas,con el promise se espera hasta que se ejecuten todas las sentencias antes decontinuar compilando
+    Promise.all(
+      map(imagesSelected, async (image) => {
+        const response = await fetch(image);
+        const blob = await response.blob();
+        const idImage = uuid(); //id aleatorio
+        //sube a storage
+        const ref = firebase.storage().ref("Restaurant").child(idImage);
+        await ref.put(blob).then(async () => {
+          //obtiene url de la imagen subida
+          await firebase
+            .storage()
+            .ref(`Restaurant/${idImage}`)
+            .getDownloadURL()
+            .then((photoUrl) => {
+              imageBlob.push(image);
+            });
+        });
+      })
+    );
+    return imageBlob;
   };
 
   return (
