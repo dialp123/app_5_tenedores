@@ -20,6 +20,9 @@ import * as ImagePicker from "expo-image-picker";
 import { map, size, filter, result } from "lodash";
 import * as Location from "expo-location";
 import MapView from "react-native-maps";
+import { firebaseApp } from "../../utils/Firebase";
+import firebase from "firebase/app";
+import "firebase/storage";
 //import AwesomeAlert from "react-native-awesome-alerts";
 
 import Modal from "../Modal";
@@ -64,10 +67,21 @@ export default function AddRestaurantForm(props) {
         iconMapColor: "red",
       };
     } else {
-      console.log("ok");
+      uploadImageStorage();
     }
 
     setErrorInput(errorTemp);
+  };
+
+  //sube imagenes seleccionadas al storage de firebase
+  const uploadImageStorage = async () => {
+    const imageBlob = [];
+    console.log(imagesSelected);
+    map(imagesSelected, async (image) => {
+      const response = await fetch(image);
+      const blob = await response.blob();
+      const ref = firebase.storage().ref("Restaurant-images").child();
+    });
   };
 
   return (
