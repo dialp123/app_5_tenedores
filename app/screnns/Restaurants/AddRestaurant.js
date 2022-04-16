@@ -18,7 +18,7 @@ export default function AddRestaurant(props) {
         setIsLoading={setIsLoading}
         navigation={navigation}
       ></AddRestaurantForm>
-      <Toast ref={toastRef} location="top" opacity={0.9}></Toast>
+      <Toast ref={toastRef} location="center" opacity={0.9}></Toast>
       <Loading isVisible={isLoading} text="Creando restaurante"></Loading>
     </ScrollView>
   );

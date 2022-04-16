@@ -1,37 +1,20 @@
-import React, { useEffect, useRef, useState } from "react";
-import {
-  StyleSheet,
-  View,
-  ScrollView,
-  Alert,
-  Dimensions,
-  Platform,
-} from "react-native";
-import {
-  Input,
-  Icon,
-  Avatar,
-  Image,
-  Button,
-  Text,
-} from "react-native-elements";
-import * as MediaLibrary from "expo-media-library";
-import * as ImagePicker from "expo-image-picker";
-import { map, size, filter, result } from "lodash";
-import * as Location from "expo-location";
-import MapView from "react-native-maps";
+import React, { useState } from "react";
+import { StyleSheet, View, ScrollView } from "react-native";
+import { Input, Button } from "react-native-elements";
+import { map, size } from "lodash";
 import { firebaseApp } from "../../utils/Firebase";
 import firebase from "firebase/app";
 import "firebase/storage";
 import uuid from "random-uuid-v4";
+import "firebase/firestore";
+const db = firebase.firestore(firebaseApp);
 //import AwesomeAlert from "react-native-awesome-alerts";
 
-import Modal from "../Modal";
-
-//Location: usadopara pedir permiso de la location del usuario y capturar sus coordenadas
-//Dimensions: usado para capturar el ancho de la pantalla en pixeles
-// uuid:usado para generarids random
-const widthScreen = Dimensions.get("window").width;
+import Map from "./Map";
+import { ImageRestaurant, UploadImage } from "./addImageRestaurant";
+//ImageRestaurant:muestra la imagen principal del restaurante
+//UploadImage:pedir permisos de galeria, seleccionar y cargar las imagenes en un estado y mostrarlas en un avatar
+// uuid:usado para generar ids random
 
 export default function AddRestaurantForm(props) {
   const { toastRef, setIsLoading, navigation } = props;
@@ -42,9 +25,14 @@ export default function AddRestaurantForm(props) {
   const [restaurantDescription, setRestaurantDescription] = useState("");
   //contener imagenes guardadas
   const [imagesSelected, setImagesSelected] = useState([]);
+  //controla a visibilidad del modal que contiene el google maps
   const [isVisibleMap, setIsVisibleMap] = useState(false);
+  //contiene la direccion del restaurante
   const [locationRestaurant, setLocationRestaurant] = useState(null);
+  //contiene los errores al llenar el formulario
   const [errorInput, setErrorInput] = useState({});
+
+  //Valida la informacion de los formularios, sube las imagenes al storage y registra toda la informacion necesaria para crear un restaurante en Cloud Firestore
   const addRestaurant = () => {
     setErrorInput({});
     let errorTemp = {};
@@ -70,9 +58,29 @@ export default function AddRestaurantForm(props) {
       };
     } else {
       setIsLoading(true);
-      uploadImageStorage.then((response) => {
-        console.log(response);
-        setIsLoading(false);
+      uploadImageStorage().then((response) => {
+        db.collection("Restaurants")
+          .add({
+            name: restaurantName,
+            address: restaurantAddres,
+            description: restaurantDescription,
+            location: locationRestaurant,
+            images: response,
+            rating: 0,
+            ratingTotal: 0,
+            quantyVoting: 0,
+            createBy: firebase.auth().currentUser.uid,
+            createAt: new Date(), //fecha de creacion:fecha actual
+          })
+          .then(() => {
+            toastRef.current.show("Nuevo restaurante creado con exito");
+            setIsLoading(false);
+            navigation.navigate("Restauranst");
+          })
+          .catch((e) => {
+            console.log(e.errorMessage);
+            setIsLoading(false);
+          });
       });
     }
 
@@ -83,7 +91,7 @@ export default function AddRestaurantForm(props) {
   const uploadImageStorage = async () => {
     const imageBlob = [];
     //dado que se tiene demaciadas sentencias asincronas,con el promise se espera hasta que se ejecuten todas las sentencias antes decontinuar compilando
-    Promise.all(
+    await Promise.all(
       map(imagesSelected, async (image) => {
         const response = await fetch(image);
         const blob = await response.blob();
@@ -134,28 +142,6 @@ export default function AddRestaurantForm(props) {
         setLocationRestaurant={setLocationRestaurant}
       ></Map>
     </ScrollView>
-  );
-}
-
-//muestra imagen principal al crear restaurante
-function ImageRestaurant(props) {
-  const { imageRestaurant } = props;
-  imageRestaurant;
-  return (
-    <View style={styles.viewFoto}>
-      <Image
-        source={
-          imageRestaurant
-            ? Platform.OS === ("android" || "ios")
-              ? {
-                  uri: imageRestaurant,
-                }
-              : imageRestaurant
-            : require("../../../assets/img/no-image.png")
-        }
-        style={{ width: widthScreen, height: 200 }}
-      ></Image>
-    </View>
   );
 }
 
@@ -210,184 +196,6 @@ function FormAdd(props) {
   );
 }
 
-// modal donde se muestra el mapa para seleccionar la ubicacion
-function Map(props) {
-  const { isVisibleMap, setIsVisibleMap, toastRef, setLocationRestaurant } =
-    props;
-  const [location, setLocation] = useState(null);
-
-  const confirmLocation = () => {
-    setLocationRestaurant(location);
-    toastRef.current.show("Localizacion seleccionada");
-    setIsVisibleMap(false);
-  };
-
-  useEffect(() => {
-    (async () => {
-      const resultPermission =
-        await Location.requestForegroundPermissionsAsync();
-
-      if (resultPermission.status !== "granted") {
-        toastRef.current.show(
-          "Aceptar manualmente los permisos de localizacion para poder agregar la direccion del restaurante",
-          3000
-        );
-        return;
-      }
-
-      const location = await Location.getCurrentPositionAsync({});
-      setLocation({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        longitudeDelta: 0.001,
-        latitudeDelta: 0.001,
-      });
-    })();
-  }, []);
-
-  return (
-    <Modal isVisible={isVisibleMap} setIsVisible={setIsVisibleMap}>
-      <View>
-        {location && (
-          <MapView
-            style={styles.mapStyle}
-            initialRegion={location}
-            showsUserLocation={true}
-            onRegionChange={(region) => {
-              //region:coordenadas donde apunta el centro de la ventana del mapView
-              setLocation(region);
-            }}
-          >
-            <MapView.Marker
-              coordinate={{
-                latitude: location.latitude,
-                longitude: location.longitude,
-              }}
-              draggable //marcador mobible
-            ></MapView.Marker>
-          </MapView>
-        )}
-        <View style={styles.mapBtn}>
-          <Button
-            title="Guardar Ubicacion"
-            containerStyle={styles.viewMapContainerSelect}
-            buttonStyle={styles.viewMapBtnSelect}
-            onPress={confirmLocation}
-          ></Button>
-          <Button
-            title="Cancelar"
-            containerStyle={styles.viewMapBtnContainerCancel}
-            buttonStyle={styles.viewMapBtnCancel}
-            onPress={() => setIsVisibleMap(false)}
-          ></Button>
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
-function UploadImage(props) {
-  const { toastRef, imagesSelected, setImagesSelected, errorInput } = props;
-
-  //sleccionar la imagen de la galeria
-  const imageSelect = async () => {
-    //pedir permiso
-    const resultPermissions = await MediaLibrary.requestPermissionsAsync();
-    if (resultPermissions === "denied") {
-      toastRef.current.show(
-        "Es neceraio aceptar los permisos de galeria, si los has rechazado tienes que ir a ajustes y aceptarlos manualmente",
-        3000
-      );
-    } else {
-      //seleccion de imagen de la galeria
-      const result = await ImagePicker.launchImageLibraryAsync({
-        allowsEditing: true,
-        aspect: [4, 3],
-      });
-      if (result.cancelled) {
-        toastRef.current.show(
-          "Has cerrado la galeria sin selecionar ninguna imagen",
-          2000
-        );
-      } else {
-        setImagesSelected([...imagesSelected, result.uri]);
-      }
-    }
-  };
-
-  //remueve imagen presionada
-  const removeImage = (image) => {
-    if (Platform.OS === "web") {
-      const confirmResult = confirm("¿Desea eliminar la imagne?");
-      if (confirmResult) {
-        setImagesSelected(
-          filter(imagesSelected, (imageUrl) => imageUrl !== image)
-        );
-      }
-    } else {
-      Alert.alert(
-        "Eliminar imagen",
-        "¿Desea eliminar la imagen?",
-        [
-          {
-            text: "Cancel",
-            style: "cancel",
-          },
-          {
-            text: "Eliminar",
-            onPress: () => {
-              setImagesSelected(
-                filter(imagesSelected, (imageUrl) => imageUrl !== image)
-              );
-            },
-          },
-        ],
-        { cancelable: false }
-      );
-    }
-  };
-
-  return (
-    <View style={styles.viewImage}>
-      {size(imagesSelected) < 5 && (
-        <Icon
-          type="materia-community"
-          name="camera"
-          color="#7a7a7a"
-          containerStyle={[
-            styles.containerIcon,
-            {
-              borderWidth: errorInput.iconImageBorder
-                ? errorInput.iconImageBorder
-                : 0,
-              borderColor: errorInput.iconImageColor
-                ? errorInput.iconImageColor
-                : "grey",
-            },
-          ]}
-          onPress={imageSelect}
-        ></Icon>
-      )}
-      {map(imagesSelected, (imageRestaurant, index) => (
-        <Avatar
-          key={index}
-          style={styles.miniatureStyle}
-          source={
-            Platform.OS === ("android" || "ios")
-              ? {
-                  uri: imageRestaurant,
-                }
-              : imageRestaurant
-          }
-          onPress={() => {
-            removeImage(imageRestaurant);
-          }}
-        ></Avatar>
-      ))}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   scrollView: {
     height: "100%",
@@ -397,61 +205,15 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   input: {
-    marginBottom: 10,
+    marginBottom: 0,
   },
   textArea: {
     height: 50,
     width: "100%",
-    padding: 0,
-    marginTop: 20,
+    marginTop: 10,
   },
   btnAddRestaurant: {
     backgroundColor: "#00a680",
     margin: 20,
-  },
-  viewImage: {
-    flexDirection: "row",
-    marginLeft: 20,
-    marginRight: 20,
-    marginTop: 20,
-  },
-  containerIcon: {
-    alignContent: "center",
-    justifyContent: "center",
-    marginRight: 10,
-    height: 70,
-    width: 70,
-    backgroundColor: "#e3e3e3",
-  },
-  miniatureStyle: {
-    width: 70,
-    height: 70,
-    marginRight: 10,
-  },
-  viewFoto: {
-    alignItems: "center",
-    height: 200,
-    marginBottom: 20,
-  },
-  mapStyle: {
-    width: "100%",
-    height: 550,
-  },
-  mapBtn: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 10,
-  },
-  viewMapBtnContainerCancel: {
-    paddingLeft: 5,
-  },
-  viewMapBtnCancel: {
-    backgroundColor: "#a60d0d",
-  },
-  viewMapContainerSelect: {
-    paddingRight: 5,
-  },
-  viewMapBtnSelect: {
-    backgroundColor: "#00a680",
   },
 });
