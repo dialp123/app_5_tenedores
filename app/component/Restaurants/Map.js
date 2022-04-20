@@ -1,6 +1,6 @@
 //modal donde se observa el mapa de google maps y se selecciona la direccion del restaurante
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, Platform } from "react-native";
 import { Button } from "react-native-elements";
 import * as Location from "expo-location";
 import MapView from "react-native-maps";
@@ -33,12 +33,6 @@ export default function Map(props) {
       }
 
       const location = await Location.getCurrentPositionAsync({});
-      setLocation({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        longitudeDelta: 0.001,
-        latitudeDelta: 0.001,
-      });
     })();
   }, []);
 

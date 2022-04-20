@@ -48,7 +48,9 @@ export default function AddRestaurantForm(props) {
         iconImageBorder: 3,
         iconImageColor: "red",
       };
-      toastRef.current.show("Seleccionar minimo una imagen de presentacion");
+      toastRef.current.show("Seleccionar minimo una imagen de presentacion", {
+        duration: 1500,
+      });
     } else if (!locationRestaurant) {
       toastRef.current.show(
         "Seleccionar ubicacion del restaurante en google maps"
@@ -73,7 +75,6 @@ export default function AddRestaurantForm(props) {
             createAt: new Date(), //fecha de creacion:fecha actual
           })
           .then(() => {
-            toastRef.current.show("Nuevo restaurante creado con exito");
             setIsLoading(false);
             navigation.navigate("Restauranst");
           })
@@ -105,7 +106,7 @@ export default function AddRestaurantForm(props) {
             .ref(`Restaurant/${idImage}`)
             .getDownloadURL()
             .then((photoUrl) => {
-              imageBlob.push(image);
+              imageBlob.push(photoUrl);
             });
         });
       })
