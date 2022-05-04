@@ -32,7 +32,13 @@ export default function Map(props) {
         return;
       }
 
-      const location = await Location.getCurrentPositionAsync({});
+      const loc = await Location.getCurrentPositionAsync({});
+      setLocation({
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+        latitudeDelta: 0.001,
+        longitudeDelta: 0.001,
+      });
     })();
   }, []);
 

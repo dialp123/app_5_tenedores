@@ -8,20 +8,24 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Image } from "react-native-elements";
+import { useNavigation } from "@react-navigation/native";
 import { rest, size } from "lodash";
 
 export default function ListRestaurants(props) {
   const { restaurants, handleLoadMore, isLoading } = props;
+  const navigation = useNavigation();
 
   return (
     <View style={{ flex: 1 }}>
       {size(restaurants) > 0 ? (
         <FlatList
           data={restaurants}
-          renderItem={(restaurant) => <Restaurant restaurant={restaurant} />} //componente que se renderiza en cada iteracion de restaurants y se pasa la informacion de cada posicion delarray
+          renderItem={(restaurant) => (
+            <Restaurant restaurant={restaurant} navigation={navigation} />
+          )} //componente que se renderiza en cada iteracion de restaurants y se pasa la informacion de cada posicion delarray
           key={(item, index) => {
             //obligatorio de Flat list
-            index.toString();
+            item.key;
           }}
           onEndReachedThreshold={0.5}
           onEndReached={handleLoadMore}
@@ -29,8 +33,8 @@ export default function ListRestaurants(props) {
         ></FlatList>
       ) : (
         <View styles={styles.loaderRestaurants}>
-          <ActivityIndicator size="large"></ActivityIndicator>
-          <Text>Cargando</Text>
+          <ActivityIndicator size="large" color="#00a680"></ActivityIndicator>
+          <Text style={{ textAlign: "center" }}>Cargando</Text>
         </View>
       )}
     </View>
@@ -38,12 +42,15 @@ export default function ListRestaurants(props) {
 }
 
 function Restaurant(props) {
-  const { restaurant } = props;
-  const { images, name, description, address } = restaurant.item;
+  const { restaurant, navigation } = props;
+  const { id, images, name, description, address } = restaurant.item;
   const imageRestaurant = images[0];
 
   const goRestaurant = () => {
-    console.log(restaurant.item);
+    navigation.navigate("Restaurant", {
+      idRestaurant: id,
+      nameRestaurant: name,
+    });
   };
 
   return (
@@ -79,13 +86,13 @@ function FooterList(props) {
   if (isLoading === true) {
     return (
       <View style={styles.loaderRestaurants}>
-        <ActivityIndicator size="large"></ActivityIndicator>
+        <ActivityIndicator size="large" color="#00a680"></ActivityIndicator>
       </View>
     );
   } else {
     return (
       <View style={styles.notFountRestaurants}>
-        <Text>No quedan restaurantes por recargar</Text>
+        <Text>No quedan mas restaurantes</Text>
       </View>
     );
   }
@@ -95,6 +102,8 @@ const styles = StyleSheet.create({
   loaderRestaurants: {
     marginTop: 10,
     marginBottom: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
   viewRestaurant: {
     flexDirection: "row",

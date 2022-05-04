@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "~1.15.0",
-    "@react-native-community/async-storage": "^1.12.1",
     "@react-native-community/masked-view": "*",
     "@react-navigation/bottom-tabs": "~5.10.0",
     "@react-navigation/native": "~5.10.0",
@@ -35,9 +34,11 @@
     "react-native-gesture-handler": "~2.1.0",
     "react-native-keyboard-aware-scroll-view": "~0.9.1",
     "react-native-maps": "~0.29.4",
+    "react-native-open-maps": "^0.4.0",
     "react-native-reanimated": "~2.3.1",
     "react-native-safe-area-context": "~3.3.2",
     "react-native-screens": "~3.10.0",
+    "react-native-snap-carousel": "^3.9.1",
     "react-native-web": "0.17.1"
   },
   "devDependencies": {

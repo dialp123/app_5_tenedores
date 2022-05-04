@@ -89,7 +89,7 @@ export default function InfoUser(props) {
     <View style={styles.viewUserInfo}>
       <Avatar
         rounded
-        size="large"
+        size="xlarge"
         containerStyle={styles.userInfoAvatar}
         source={
           Platform.OS === ("android" || "ios")
